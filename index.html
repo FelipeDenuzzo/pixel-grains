@@ -8,32 +8,20 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #111; overflow: hidden; touch-action: none; font-family: -apple-system, sans-serif; color: #fff; }
   canvas { display: block; }
-
   .screen {
     position: fixed; inset: 0;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    background: #111;
-    transition: opacity 0.4s;
-    z-index: 10;
+    background: #111; transition: opacity 0.4s; z-index: 10;
   }
   .screen.hidden { opacity: 0; pointer-events: none; }
-
-  #homeScreen .logo {
-    font-size: 48px; font-weight: 800;
-    letter-spacing: -2px; margin-bottom: 6px;
-  }
+  #homeScreen .logo { font-size: 48px; font-weight: 800; letter-spacing: -2px; margin-bottom: 6px; }
   #homeScreen .logo span { color: #E63946; }
-  #homeScreen .subtitle {
-    font-size: 13px; color: rgba(255,255,255,0.4);
-    margin-bottom: 60px; letter-spacing: 2px;
-    text-transform: uppercase;
-  }
+  #homeScreen .subtitle { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 60px; letter-spacing: 2px; text-transform: uppercase; }
   .mode-card {
-    width: 260px; background: #1e1e1e;
-    border: 1px solid #333; border-radius: 16px;
-    padding: 24px 20px; margin-bottom: 14px;
-    cursor: pointer; transition: border-color 0.2s, transform 0.15s;
+    width: 260px; background: #1e1e1e; border: 1px solid #333; border-radius: 16px;
+    padding: 24px 20px; margin-bottom: 14px; cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
     text-align: left; text-decoration: none; display: block; color: #fff;
   }
   .mode-card:active { transform: scale(0.97); }
@@ -42,64 +30,31 @@
   .mode-card .mode-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
   .mode-card .mode-desc { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; }
   .mode-card .mode-badge {
-    display: inline-block; font-size: 10px;
-    background: #E63946; color: #fff;
-    border-radius: 6px; padding: 2px 8px;
-    margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;
+    display: inline-block; font-size: 10px; background: #E63946; color: #fff;
+    border-radius: 6px; padding: 2px 8px; margin-bottom: 10px;
+    text-transform: uppercase; letter-spacing: 1px;
   }
   .mode-card.neon .mode-badge { background: #BC13FE; }
-
   #rotationScreen .icon { font-size: 56px; margin-bottom: 20px; }
   #rotationScreen h2 { font-size: 22px; font-weight: 700; margin-bottom: 10px; text-align: center; }
-  #rotationScreen p {
-    font-size: 14px; color: rgba(255,255,255,0.5);
-    text-align: center; max-width: 280px;
-    line-height: 1.6; margin-bottom: 40px;
-  }
-  .btn-primary {
-    background: #E63946; color: #fff; border: none;
-    border-radius: 14px; padding: 16px 48px;
-    font-size: 16px; font-weight: 700; cursor: pointer;
-    transition: opacity 0.2s;
-  }
+  #rotationScreen p { font-size: 14px; color: rgba(255,255,255,0.5); text-align: center; max-width: 280px; line-height: 1.6; margin-bottom: 40px; }
+  .btn-primary { background: #E63946; color: #fff; border: none; border-radius: 14px; padding: 16px 48px; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
   .btn-primary:active { opacity: 0.8; }
-
-  #hint {
-    position: fixed; bottom: 40px; left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255,255,255,0.4);
-    font-size: 13px; text-align: center;
-    pointer-events: none; transition: opacity 1s; z-index: 5;
-  }
-  #permBtn {
-    display: none;
-    position: fixed; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 14px 28px; background: #fff; color: #111;
-    border: none; border-radius: 12px;
-    font-size: 16px; cursor: pointer; z-index: 5;
-  }
-  #backBtn {
-    position: fixed; top: 20px; left: 20px;
-    background: rgba(255,255,255,0.1); border: none; color: #fff;
-    border-radius: 10px; padding: 8px 14px;
-    font-size: 13px; cursor: pointer; z-index: 5;
-  }
+  #hint { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.4); font-size: 13px; text-align: center; pointer-events: none; transition: opacity 1s; z-index: 5; }
+  #permBtn { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 14px 28px; background: #fff; color: #111; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; z-index: 5; }
+  #backBtn { position: fixed; top: 20px; left: 20px; background: rgba(255,255,255,0.1); border: none; color: #fff; border-radius: 10px; padding: 8px 14px; font-size: 13px; cursor: pointer; z-index: 5; }
 </style>
 </head>
 <body>
 
-<!-- HOME -->
 <div class="screen" id="homeScreen">
   <div class="logo">PIXEL<span>.</span></div>
   <div class="subtitle">Grains</div>
-
   <div class="mode-card" id="startMode">
     <div class="mode-badge">Disponível</div>
     <div class="mode-title">Moedor de Pixels</div>
     <div class="mode-desc">Solte os pixels com a gravidade e quebre-os sacudindo o celular.</div>
   </div>
-
   <a class="mode-card neon" href="neon.html">
     <div class="mode-badge">Disponível</div>
     <div class="mode-title" style="color:#00FFFF;">Neon Grinder</div>
@@ -107,7 +62,6 @@
   </a>
 </div>
 
-<!-- ROTATION TIP -->
 <div class="screen hidden" id="rotationScreen">
   <div class="icon">🔒</div>
   <h2>Trave a rotação da tela</h2>
@@ -115,7 +69,6 @@
   <button class="btn-primary" id="gotItBtn">Entendi, vamos lá!</button>
 </div>
 
-<!-- GAME -->
 <canvas id="c"></canvas>
 <div id="hint">Gire o celular para soltar os pixels ↓</div>
 <button id="permBtn">Ativar sensor de movimento</button>
@@ -147,64 +100,77 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 
 let W, H;
-function resize() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-}
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
 resize();
 window.addEventListener('resize', () => { resize(); rebuildWalls(); });
 
-const COLORS = [
-  '#E63946','#F4A261','#2A9D8F','#457B9D',
-  '#E9C46A','#8338EC','#06D6A0','#FF6B6B',
-  '#A8DADC','#FB5607','#FFBE0B','#3A86FF'
-];
+const COLORS = ['#E63946','#F4A261','#2A9D8F','#457B9D','#E9C46A','#8338EC','#06D6A0','#FF6B6B','#A8DADC','#FB5607','#FFBE0B','#3A86FF'];
 
 const engine = Engine.create({ gravity: { x: 0, y: 1 }, enableSleeping: true });
 const world = engine.world;
-
-const PIXEL_SIZE = 18;
-const GAP = 3;
-const HIT_VELOCITY = 1.8;
-
+const PIXEL_SIZE = 18, GAP = 3, HIT_VELOCITY = 1.8;
 const pixelMap = new Map();
-let walls = [];
-let wallSet = new Set();
-let activated = false;
-let toBreak = [];
-let gameStarted = false;
-let totalPixels = 0;
+let walls = [], wallSet = new Set();
+let activated = false, toBreak = [], gameStarted = false, totalPixels = 0;
 
-// --- Vibração ---
-const VIBRATE_THROTTLE = 120;
-let lastVibTime = 0;
+// --- Audio crunch ---
+let audioCtx = null;
+const CRUNCH_THROTTLE = 100;
+let lastCrunchTime = 0;
 
-function vibrateOnWallHit() {
-  if (!navigator.vibrate) return;
-  const now = Date.now();
-  if (now - lastVibTime < VIBRATE_THROTTLE) return;
-  lastVibTime = now;
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playCrunch() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const wallNow = Date.now();
+  if (wallNow - lastCrunchTime < CRUNCH_THROTTLE) return;
+  lastCrunchTime = wallNow;
+
   const ratio = totalPixels > 0 ? pixelMap.size / totalPixels : 0;
-  const duration = Math.round(5 + ratio * 35);
-  if (duration >= 5) navigator.vibrate(duration);
+  // volume base baixo: 0.03 (vazio) -> 0.18 (cheio)
+  const gain   = 0.03 + ratio * 0.15;
+  // duração do envelope: 40ms (vazio) -> 120ms (cheio)
+  const dur    = 0.04 + ratio * 0.08;
+
+  const bufSize = Math.floor(audioCtx.sampleRate * dur);
+  const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) {
+    // ruido branco com decaimento exponencial
+    const env = Math.exp(-i / (bufSize * 0.3));
+    data[i] = (Math.random() * 2 - 1) * env;
+  }
+
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+
+  // filtro passa-baixa para som grave/abafado
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 280 + ratio * 220; // 280Hz vazio -> 500Hz cheio
+
+  const gainNode = audioCtx.createGain();
+  gainNode.gain.setValueAtTime(gain, now);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  src.connect(filter);
+  filter.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  src.start(now);
 }
 
 function createPixelBody(x, y, size, color, hits, gen, isStatic) {
-  const body = Bodies.rectangle(x, y, size, size, {
-    isStatic: isStatic || false,
-    restitution: 0.2, friction: 0.8,
-    frictionAir: 0.08, sleepThreshold: 30
-  });
-  body._color = color; body._size = size;
-  body._hits = hits; body._gen = gen;
-  World.add(world, body);
-  pixelMap.set(body.id, body);
+  const body = Bodies.rectangle(x, y, size, size, { isStatic: isStatic || false, restitution: 0.2, friction: 0.8, frictionAir: 0.08, sleepThreshold: 30 });
+  body._color = color; body._size = size; body._hits = hits; body._gen = gen;
+  World.add(world, body); pixelMap.set(body.id, body);
   return body;
 }
 
 function rebuildWalls() {
-  walls.forEach(w => World.remove(world, w));
-  wallSet.clear();
+  walls.forEach(w => World.remove(world, w)); wallSet.clear();
   const t = 60;
   walls = [
     Bodies.rectangle(W/2, H+t/2, W+100, t, { isStatic: true }),
@@ -218,35 +184,28 @@ function rebuildWalls() {
 rebuildWalls();
 
 function buildPixels() {
-  pixelMap.forEach(b => World.remove(world, b));
-  pixelMap.clear();
+  pixelMap.forEach(b => World.remove(world, b)); pixelMap.clear();
   const cols = Math.floor(W / (PIXEL_SIZE + GAP));
   const rows = Math.floor(H / (PIXEL_SIZE + GAP));
-  const offsetX = (W - cols * (PIXEL_SIZE + GAP)) / 2 + PIXEL_SIZE / 2;
-  const offsetY = (H - rows * (PIXEL_SIZE + GAP)) / 2 + PIXEL_SIZE / 2;
-  const emptyTop    = Math.floor(rows * 0.42);
-  const emptyBottom = Math.floor(rows * 0.58);
-  const emptyLeft   = Math.floor(cols * 0.30);
-  const emptyRight  = Math.floor(cols * 0.70);
-  function pickColor(r, c, grid) {
+  const offsetX = (W - cols*(PIXEL_SIZE+GAP))/2 + PIXEL_SIZE/2;
+  const offsetY = (H - rows*(PIXEL_SIZE+GAP))/2 + PIXEL_SIZE/2;
+  const emptyTop = Math.floor(rows*0.42), emptyBottom = Math.floor(rows*0.58);
+  const emptyLeft = Math.floor(cols*0.30), emptyRight = Math.floor(cols*0.70);
+  function pickColor(r,c,grid) {
     const used = new Set();
-    if (r > 0 && grid[r-1]?.[c]) used.add(grid[r-1][c]);
-    if (c > 0 && grid[r]?.[c-1]) used.add(grid[r][c-1]);
-    const av = COLORS.filter(x => !used.has(x));
-    return av[Math.floor(Math.random() * av.length)] || COLORS[0];
+    if (r>0 && grid[r-1]?.[c]) used.add(grid[r-1][c]);
+    if (c>0 && grid[r]?.[c-1]) used.add(grid[r][c-1]);
+    const av = COLORS.filter(x=>!used.has(x));
+    return av[Math.floor(Math.random()*av.length)] || COLORS[0];
   }
   const grid = [];
-  for (let r = 0; r < rows; r++) {
-    grid[r] = [];
-    for (let c = 0; c < cols; c++) {
-      if (r >= emptyTop && r < emptyBottom && c >= emptyLeft && c < emptyRight) {
-        grid[r][c] = null; continue;
-      }
-      const x = offsetX + c * (PIXEL_SIZE + GAP);
-      const y = offsetY + r * (PIXEL_SIZE + GAP);
-      const color = pickColor(r, c, grid);
-      grid[r][c] = color;
-      createPixelBody(x, y, PIXEL_SIZE, color, 10, 0, true);
+  for (let r=0;r<rows;r++) {
+    grid[r]=[];
+    for (let c=0;c<cols;c++) {
+      if (r>=emptyTop&&r<emptyBottom&&c>=emptyLeft&&c<emptyRight){grid[r][c]=null;continue;}
+      const x=offsetX+c*(PIXEL_SIZE+GAP), y=offsetY+r*(PIXEL_SIZE+GAP);
+      const color=pickColor(r,c,grid); grid[r][c]=color;
+      createPixelBody(x,y,PIXEL_SIZE,color,10,0,true);
     }
   }
   totalPixels = pixelMap.size;
@@ -258,7 +217,7 @@ Events.on(engine, 'collisionStart', (event) => {
     const { bodyA, bodyB } = pair;
     const relVel = Vector.magnitude(Vector.sub(bodyA.velocity, bodyB.velocity));
     const hitsWall = wallSet.has(bodyA.id) || wallSet.has(bodyB.id);
-    if (hitsWall && relVel >= HIT_VELOCITY) vibrateOnWallHit();
+    if (hitsWall && relVel >= HIT_VELOCITY) playCrunch();
     if (relVel < HIT_VELOCITY) return;
     [bodyA, bodyB].forEach(b => {
       if (!pixelMap.has(b.id)) return;
@@ -269,113 +228,88 @@ Events.on(engine, 'collisionStart', (event) => {
 });
 
 function breakPixel(body) {
-  const { x, y } = body.position;
-  const size = body._size;
-  const color = body._color;
-  const gen = body._gen;
-  World.remove(world, body); pixelMap.delete(body.id);
-  if (gen >= 1) return;
-  const half = Math.floor(size / 2);
-  [[-half/2, 0], [half/2, 0]].forEach(([dx, dy]) => {
-    const nb = createPixelBody(x+dx, y+dy, half, color, 6, 1, false);
-    Body.applyForce(nb, nb.position, {
-      x: (Math.random()-0.5)*0.002, y: -Math.random()*0.002
-    });
+  const {x,y}=body.position, size=body._size, color=body._color, gen=body._gen;
+  World.remove(world,body); pixelMap.delete(body.id);
+  if (gen>=1) return;
+  const half=Math.floor(size/2);
+  [[-half/2,0],[half/2,0]].forEach(([dx,dy])=>{
+    const nb=createPixelBody(x+dx,y+dy,half,color,6,1,false);
+    Body.applyForce(nb,nb.position,{x:(Math.random()-0.5)*0.002,y:-Math.random()*0.002});
   });
 }
 
 function releasePixels() {
   if (activated) return;
-  activated = true; hint.style.opacity = '0';
-  pixelMap.forEach(body => {
-    Body.setStatic(body, false);
-    Body.applyForce(body, body.position, {
-      x: (Math.random()-0.5)*0.0008, y: (Math.random()-0.5)*0.0008
-    });
+  activated = true; hint.style.opacity='0';
+  pixelMap.forEach(body=>{
+    Body.setStatic(body,false);
+    Body.applyForce(body,body.position,{x:(Math.random()-0.5)*0.0008,y:(Math.random()-0.5)*0.0008});
   });
 }
 
 function activateSensors() {
-  window.addEventListener('deviceorientation', (e) => {
+  window.addEventListener('deviceorientation',(e)=>{
     if (!activated) return;
-    const beta  = (e.beta  || 0) * Math.PI / 180;
-    const gamma = (e.gamma || 0) * Math.PI / 180;
-    const newGx = Math.sin(gamma) * Math.cos(beta) * 2;
-    const newGy = Math.sin(beta) * 2;
-    if (Math.abs(newGx - engine.gravity.x) > 0.05 || Math.abs(newGy - engine.gravity.y) > 0.05) {
-      engine.gravity.x = newGx; engine.gravity.y = newGy;
-      pixelMap.forEach(b => Sleeping.set(b, false));
+    const beta=(e.beta||0)*Math.PI/180, gamma=(e.gamma||0)*Math.PI/180;
+    const newGx=Math.sin(gamma)*Math.cos(beta)*2, newGy=Math.sin(beta)*2;
+    if (Math.abs(newGx-engine.gravity.x)>0.05||Math.abs(newGy-engine.gravity.y)>0.05) {
+      engine.gravity.x=newGx; engine.gravity.y=newGy;
+      pixelMap.forEach(b=>Sleeping.set(b,false));
     }
-  }, true);
+  },true);
 }
 
 function setupOrientation() {
-  if (typeof DeviceOrientationEvent !== 'undefined' &&
-      typeof DeviceOrientationEvent.requestPermission === 'function') {
-    permBtn.style.display = 'block';
-    permBtn.addEventListener('click', async () => {
+  if (typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function') {
+    permBtn.style.display='block';
+    permBtn.addEventListener('click',async()=>{
       try {
-        const perm = await DeviceOrientationEvent.requestPermission();
-        if (perm === 'granted') {
-          permBtn.style.display = 'none';
-          activateSensors(); releasePixels();
-        }
-      } catch(e) { console.error(e); }
+        const perm=await DeviceOrientationEvent.requestPermission();
+        if (perm==='granted'){permBtn.style.display='none';activateSensors();releasePixels();}
+      } catch(e){console.error(e);}
     });
   } else {
     activateSensors();
-    window.addEventListener('deviceorientation', function first(e) {
-      if (Math.abs(e.gamma) > 5 || Math.abs(e.beta) > 5) {
-        releasePixels();
-        window.removeEventListener('deviceorientation', first, true);
-      }
-    }, true);
-    window.addEventListener('touchstart', releasePixels, { once: true });
+    window.addEventListener('deviceorientation',function first(e){
+      if (Math.abs(e.gamma)>5||Math.abs(e.beta)>5){releasePixels();window.removeEventListener('deviceorientation',first,true);}
+    },true);
+    window.addEventListener('touchstart',releasePixels,{once:true});
   }
 }
 
 function startGame() {
   if (gameStarted) return;
-  gameStarted = true;
+  gameStarted=true;
+  initAudio();
   buildPixels(); setupOrientation(); loop();
 }
 
 function drawPixel(body) {
-  const size = body._size;
-  const color = body._color;
-  const maxHits = body._gen === 0 ? 10 : 6;
-  const damage = 1 - (body._hits / maxHits);
-  const { x, y } = body.position;
-  ctx.save();
-  ctx.translate(x, y); ctx.rotate(body.angle);
-  ctx.globalAlpha = 1 - damage * 0.3;
-  ctx.fillStyle = color;
-  ctx.fillRect(-size/2, -size/2, size, size);
-  if (damage > 0.4) {
-    ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 0.8;
-    ctx.beginPath();
-    ctx.moveTo(-size/4, -size/2); ctx.lineTo(size/4, size/2);
-    ctx.stroke();
+  const size=body._size, color=body._color;
+  const maxHits=body._gen===0?10:6;
+  const damage=1-(body._hits/maxHits);
+  const {x,y}=body.position;
+  ctx.save(); ctx.translate(x,y); ctx.rotate(body.angle);
+  ctx.globalAlpha=1-damage*0.3;
+  ctx.fillStyle=color;
+  ctx.fillRect(-size/2,-size/2,size,size);
+  if (damage>0.4){
+    ctx.strokeStyle='rgba(0,0,0,0.6)';ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.moveTo(-size/4,-size/2);ctx.lineTo(size/4,size/2);ctx.stroke();
   }
-  if (damage > 0.7) {
-    ctx.beginPath();
-    ctx.moveTo(size/2, -size/4); ctx.lineTo(-size/2, size/4);
-    ctx.stroke();
+  if (damage>0.7){
+    ctx.beginPath();ctx.moveTo(size/2,-size/4);ctx.lineTo(-size/2,size/4);ctx.stroke();
   }
-  ctx.globalAlpha = 1;
-  ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 1.5;
-  ctx.strokeRect(-size/2, -size/2, size, size);
+  ctx.globalAlpha=1;ctx.strokeStyle='rgba(0,0,0,0.7)';ctx.lineWidth=1.5;
+  ctx.strokeRect(-size/2,-size/2,size,size);
   ctx.restore();
 }
 
 function loop() {
-  Engine.update(engine, 1000/60);
-  if (toBreak.length > 0) {
-    toBreak.forEach(id => { const b = pixelMap.get(id); if (b) breakPixel(b); });
-    toBreak = [];
-  }
-  ctx.fillStyle = '#111'; ctx.fillRect(0, 0, W, H);
-  pixelMap.forEach(b => drawPixel(b));
+  Engine.update(engine,1000/60);
+  if (toBreak.length>0){toBreak.forEach(id=>{const b=pixelMap.get(id);if(b)breakPixel(b);});toBreak=[];}
+  ctx.fillStyle='#111';ctx.fillRect(0,0,W,H);
+  pixelMap.forEach(b=>drawPixel(b));
   requestAnimationFrame(loop);
 }
 </script>
