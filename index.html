@@ -169,9 +169,25 @@ const HIT_VELOCITY = 1.8;
 
 const pixelMap = new Map();
 let walls = [];
+let wallSet = new Set();
 let activated = false;
 let toBreak = [];
 let gameStarted = false;
+let totalPixels = 0;
+
+// --- Vibração ---
+const VIBRATE_THROTTLE = 120;
+let lastVibTime = 0;
+
+function vibrateOnWallHit() {
+  if (!navigator.vibrate) return;
+  const now = Date.now();
+  if (now - lastVibTime < VIBRATE_THROTTLE) return;
+  lastVibTime = now;
+  const ratio = totalPixels > 0 ? pixelMap.size / totalPixels : 0;
+  const duration = Math.round(5 + ratio * 35);
+  if (duration >= 5) navigator.vibrate(duration);
+}
 
 function createPixelBody(x, y, size, color, hits, gen, isStatic) {
   const body = Bodies.rectangle(x, y, size, size, {
@@ -188,6 +204,7 @@ function createPixelBody(x, y, size, color, hits, gen, isStatic) {
 
 function rebuildWalls() {
   walls.forEach(w => World.remove(world, w));
+  wallSet.clear();
   const t = 60;
   walls = [
     Bodies.rectangle(W/2, H+t/2, W+100, t, { isStatic: true }),
@@ -195,6 +212,7 @@ function rebuildWalls() {
     Bodies.rectangle(-t/2, H/2,  t, H+100, { isStatic: true }),
     Bodies.rectangle(W+t/2, H/2, t, H+100, { isStatic: true }),
   ];
+  walls.forEach(w => wallSet.add(w.id));
   World.add(world, walls);
 }
 rebuildWalls();
@@ -231,6 +249,7 @@ function buildPixels() {
       createPixelBody(x, y, PIXEL_SIZE, color, 10, 0, true);
     }
   }
+  totalPixels = pixelMap.size;
 }
 
 Events.on(engine, 'collisionStart', (event) => {
@@ -238,6 +257,8 @@ Events.on(engine, 'collisionStart', (event) => {
   event.pairs.forEach(pair => {
     const { bodyA, bodyB } = pair;
     const relVel = Vector.magnitude(Vector.sub(bodyA.velocity, bodyB.velocity));
+    const hitsWall = wallSet.has(bodyA.id) || wallSet.has(bodyB.id);
+    if (hitsWall && relVel >= HIT_VELOCITY) vibrateOnWallHit();
     if (relVel < HIT_VELOCITY) return;
     [bodyA, bodyB].forEach(b => {
       if (!pixelMap.has(b.id)) return;
