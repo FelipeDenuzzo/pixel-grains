@@ -3,73 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Pixel Grains</title>
+<title>Pixel Grains — Neon</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #111; overflow: hidden; touch-action: none; font-family: -apple-system, sans-serif; color: #fff; }
+  body { background: #000; overflow: hidden; touch-action: none; font-family: -apple-system, sans-serif; color: #fff; }
   canvas { display: block; }
-
-  .screen {
-    position: fixed; inset: 0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    background: #111;
-    transition: opacity 0.4s;
-    z-index: 10;
-  }
-  .screen.hidden { opacity: 0; pointer-events: none; }
-
-  #homeScreen .logo {
-    font-size: 48px; font-weight: 800;
-    letter-spacing: -2px; margin-bottom: 6px;
-  }
-  #homeScreen .logo span { color: #E63946; }
-  #homeScreen .subtitle {
-    font-size: 13px; color: rgba(255,255,255,0.4);
-    margin-bottom: 60px; letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-  .mode-card {
-    width: 260px; background: #1e1e1e;
-    border: 1px solid #333; border-radius: 16px;
-    padding: 24px 20px; margin-bottom: 14px;
-    cursor: pointer; transition: border-color 0.2s, transform 0.15s;
-    text-align: left; text-decoration: none; display: block; color: #fff;
-  }
-  .mode-card:active { transform: scale(0.97); }
-  .mode-card:hover { border-color: #E63946; }
-  .mode-card.neon:hover { border-color: #00FFFF; }
-  .mode-card .mode-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-  .mode-card .mode-desc { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; }
-  .mode-card .mode-badge {
-    display: inline-block; font-size: 10px;
-    background: #E63946; color: #fff;
-    border-radius: 6px; padding: 2px 8px;
-    margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;
-  }
-  .mode-card.neon .mode-badge { background: #BC13FE; }
-
-  #rotationScreen .icon { font-size: 56px; margin-bottom: 20px; }
-  #rotationScreen h2 { font-size: 22px; font-weight: 700; margin-bottom: 10px; text-align: center; }
-  #rotationScreen p {
-    font-size: 14px; color: rgba(255,255,255,0.5);
-    text-align: center; max-width: 280px;
-    line-height: 1.6; margin-bottom: 40px;
-  }
-  .btn-primary {
-    background: #E63946; color: #fff; border: none;
-    border-radius: 14px; padding: 16px 48px;
-    font-size: 16px; font-weight: 700; cursor: pointer;
-    transition: opacity 0.2s;
-  }
-  .btn-primary:active { opacity: 0.8; }
-
   #hint {
     position: fixed; bottom: 40px; left: 50%;
     transform: translateX(-50%);
     color: rgba(255,255,255,0.4);
     font-size: 13px; text-align: center;
-    pointer-events: none; transition: opacity 1s; z-index: 5;
+    pointer-events: none; transition: opacity 1s;
+    z-index: 5;
   }
   #permBtn {
     display: none;
@@ -77,45 +22,23 @@
     transform: translate(-50%, -50%);
     padding: 14px 28px; background: #fff; color: #111;
     border: none; border-radius: 12px;
-    font-size: 16px; cursor: pointer; z-index: 5;
+    font-size: 16px; cursor: pointer;
+    z-index: 5;
   }
   #backBtn {
     position: fixed; top: 20px; left: 20px;
-    background: rgba(255,255,255,0.1); border: none; color: #fff;
-    border-radius: 10px; padding: 8px 14px;
-    font-size: 13px; cursor: pointer; z-index: 5;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    z-index: 5;
   }
 </style>
 </head>
 <body>
-
-<!-- HOME -->
-<div class="screen" id="homeScreen">
-  <div class="logo">PIXEL<span>.</span></div>
-  <div class="subtitle">Grains</div>
-
-  <div class="mode-card" id="startMode">
-    <div class="mode-badge">Disponível</div>
-    <div class="mode-title">Moedor de Pixels</div>
-    <div class="mode-desc">Solte os pixels com a gravidade e quebre-os sacudindo o celular.</div>
-  </div>
-
-  <a class="mode-card neon" href="neon.html">
-    <div class="mode-badge">Disponível</div>
-    <div class="mode-title" style="color:#00FFFF;">Neon Grinder</div>
-    <div class="mode-desc">Pixels neon que trocam de cor a cada impacto. Fundo preto, brilho intenso.</div>
-  </a>
-</div>
-
-<!-- ROTATION TIP -->
-<div class="screen hidden" id="rotationScreen">
-  <div class="icon">🔒</div>
-  <h2>Trave a rotação da tela</h2>
-  <p>Para uma melhor experiência, ative o <strong>bloqueio de rotação</strong> no seu celular antes de jogar.<br><br>Deslize o Centro de Controle e toque no ícone de rotação.</p>
-  <button class="btn-primary" id="gotItBtn">Entendi, vamos lá!</button>
-</div>
-
-<!-- GAME -->
 <canvas id="c"></canvas>
 <div id="hint">Gire o celular para soltar os pixels ↓</div>
 <button id="permBtn">Ativar sensor de movimento</button>
@@ -125,26 +48,13 @@
 <script>
 const { Engine, Events, Bodies, Body, World, Sleeping, Vector } = Matter;
 
-const homeScreen     = document.getElementById('homeScreen');
-const rotationScreen = document.getElementById('rotationScreen');
-const startMode      = document.getElementById('startMode');
-const gotItBtn       = document.getElementById('gotItBtn');
-const backBtn        = document.getElementById('backBtn');
-const hint           = document.getElementById('hint');
-const permBtn        = document.getElementById('permBtn');
-
-startMode.addEventListener('click', () => {
-  homeScreen.classList.add('hidden');
-  rotationScreen.classList.remove('hidden');
-});
-gotItBtn.addEventListener('click', () => {
-  rotationScreen.classList.add('hidden');
-  startGame();
-});
-backBtn.addEventListener('click', () => { location.reload(); });
-
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
+const hint = document.getElementById('hint');
+const permBtn = document.getElementById('permBtn');
+const backBtn = document.getElementById('backBtn');
+
+backBtn.addEventListener('click', () => { window.location.href = 'index.html'; });
 
 let W, H;
 function resize() {
@@ -154,11 +64,21 @@ function resize() {
 resize();
 window.addEventListener('resize', () => { resize(); rebuildWalls(); });
 
-const COLORS = [
-  '#E63946','#F4A261','#2A9D8F','#457B9D',
-  '#E9C46A','#8338EC','#06D6A0','#FF6B6B',
-  '#A8DADC','#FB5607','#FFBE0B','#3A86FF'
+const NEON_COLORS = [
+  '#2CFF05', // Verde Neon
+  '#2323FF', // Azul Neon
+  '#FF6EC7', // Rosa Neon
+  '#E0FF2E', // Amarelo Neon
+  '#FF5F1F', // Laranja Neon
+  '#BC13FE', // Roxo Neon
+  '#00FFFF', // Ciano Neon
+  '#FF073A'  // Vermelho Neon
 ];
+
+function randomNeonExcluding(exclude) {
+  const av = NEON_COLORS.filter(c => c !== exclude);
+  return av[Math.floor(Math.random() * av.length)];
+}
 
 const engine = Engine.create({ gravity: { x: 0, y: 1 }, enableSleeping: true });
 const world = engine.world;
@@ -171,7 +91,6 @@ const pixelMap = new Map();
 let walls = [];
 let activated = false;
 let toBreak = [];
-let gameStarted = false;
 
 function createPixelBody(x, y, size, color, hits, gen, isStatic) {
   const body = Bodies.rectangle(x, y, size, size, {
@@ -179,8 +98,10 @@ function createPixelBody(x, y, size, color, hits, gen, isStatic) {
     restitution: 0.2, friction: 0.8,
     frictionAir: 0.08, sleepThreshold: 30
   });
-  body._color = color; body._size = size;
-  body._hits = hits; body._gen = gen;
+  body._color = color;
+  body._size = size;
+  body._hits = hits;
+  body._gen = gen;
   World.add(world, body);
   pixelMap.set(body.id, body);
   return body;
@@ -214,8 +135,8 @@ function buildPixels() {
     const used = new Set();
     if (r > 0 && grid[r-1]?.[c]) used.add(grid[r-1][c]);
     if (c > 0 && grid[r]?.[c-1]) used.add(grid[r][c-1]);
-    const av = COLORS.filter(x => !used.has(x));
-    return av[Math.floor(Math.random() * av.length)] || COLORS[0];
+    const av = NEON_COLORS.filter(x => !used.has(x));
+    return av[Math.floor(Math.random() * av.length)] || NEON_COLORS[0];
   }
   const grid = [];
   for (let r = 0; r < rows; r++) {
@@ -232,7 +153,9 @@ function buildPixels() {
     }
   }
 }
+buildPixels();
 
+// change color on each valid hit
 Events.on(engine, 'collisionStart', (event) => {
   if (!activated) return;
   event.pairs.forEach(pair => {
@@ -241,6 +164,7 @@ Events.on(engine, 'collisionStart', (event) => {
     if (relVel < HIT_VELOCITY) return;
     [bodyA, bodyB].forEach(b => {
       if (!pixelMap.has(b.id)) return;
+      b._color = randomNeonExcluding(b._color); // troca de cor
       b._hits--;
       if (b._hits <= 0 && !toBreak.includes(b.id)) toBreak.push(b.id);
     });
@@ -252,11 +176,13 @@ function breakPixel(body) {
   const size = body._size;
   const color = body._color;
   const gen = body._gen;
-  World.remove(world, body); pixelMap.delete(body.id);
+  World.remove(world, body);
+  pixelMap.delete(body.id);
   if (gen >= 1) return;
   const half = Math.floor(size / 2);
   [[-half/2, 0], [half/2, 0]].forEach(([dx, dy]) => {
-    const nb = createPixelBody(x+dx, y+dy, half, color, 6, 1, false);
+    const newColor = randomNeonExcluding(color);
+    const nb = createPixelBody(x+dx, y+dy, half, newColor, 6, 1, false);
     Body.applyForce(nb, nb.position, {
       x: (Math.random()-0.5)*0.002, y: -Math.random()*0.002
     });
@@ -265,7 +191,8 @@ function breakPixel(body) {
 
 function releasePixels() {
   if (activated) return;
-  activated = true; hint.style.opacity = '0';
+  activated = true;
+  hint.style.opacity = '0';
   pixelMap.forEach(body => {
     Body.setStatic(body, false);
     Body.applyForce(body, body.position, {
@@ -282,7 +209,8 @@ function activateSensors() {
     const newGx = Math.sin(gamma) * Math.cos(beta) * 2;
     const newGy = Math.sin(beta) * 2;
     if (Math.abs(newGx - engine.gravity.x) > 0.05 || Math.abs(newGy - engine.gravity.y) > 0.05) {
-      engine.gravity.x = newGx; engine.gravity.y = newGy;
+      engine.gravity.x = newGx;
+      engine.gravity.y = newGy;
       pixelMap.forEach(b => Sleeping.set(b, false));
     }
   }, true);
@@ -297,7 +225,8 @@ function setupOrientation() {
         const perm = await DeviceOrientationEvent.requestPermission();
         if (perm === 'granted') {
           permBtn.style.display = 'none';
-          activateSensors(); releasePixels();
+          activateSensors();
+          releasePixels();
         }
       } catch(e) { console.error(e); }
     });
@@ -312,12 +241,7 @@ function setupOrientation() {
     window.addEventListener('touchstart', releasePixels, { once: true });
   }
 }
-
-function startGame() {
-  if (gameStarted) return;
-  gameStarted = true;
-  buildPixels(); setupOrientation(); loop();
-}
+setupOrientation();
 
 function drawPixel(body) {
   const size = body._size;
@@ -326,12 +250,21 @@ function drawPixel(body) {
   const damage = 1 - (body._hits / maxHits);
   const { x, y } = body.position;
   ctx.save();
-  ctx.translate(x, y); ctx.rotate(body.angle);
-  ctx.globalAlpha = 1 - damage * 0.3;
+  ctx.translate(x, y);
+  ctx.rotate(body.angle);
+
+  // glow neon
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 8 + damage * 10;
+
+  ctx.globalAlpha = 1 - damage * 0.25;
   ctx.fillStyle = color;
   ctx.fillRect(-size/2, -size/2, size, size);
+
   if (damage > 0.4) {
-    ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 0.8;
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 0.8;
     ctx.beginPath();
     ctx.moveTo(-size/4, -size/2); ctx.lineTo(size/4, size/2);
     ctx.stroke();
@@ -341,8 +274,11 @@ function drawPixel(body) {
     ctx.moveTo(size/2, -size/4); ctx.lineTo(-size/2, size/4);
     ctx.stroke();
   }
+
+  ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
-  ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 1.5;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
   ctx.strokeRect(-size/2, -size/2, size, size);
   ctx.restore();
 }
@@ -353,10 +289,12 @@ function loop() {
     toBreak.forEach(id => { const b = pixelMap.get(id); if (b) breakPixel(b); });
     toBreak = [];
   }
-  ctx.fillStyle = '#111'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
   pixelMap.forEach(b => drawPixel(b));
   requestAnimationFrame(loop);
 }
+loop();
 </script>
 </body>
 </html>
