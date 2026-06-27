@@ -65,14 +65,8 @@ resize();
 window.addEventListener('resize', () => { resize(); rebuildWalls(); });
 
 const NEON_COLORS = [
-  '#2CFF05', // Verde Neon
-  '#2323FF', // Azul Neon
-  '#FF6EC7', // Rosa Neon
-  '#E0FF2E', // Amarelo Neon
-  '#FF5F1F', // Laranja Neon
-  '#BC13FE', // Roxo Neon
-  '#00FFFF', // Ciano Neon
-  '#FF073A'  // Vermelho Neon
+  '#2CFF05', '#2323FF', '#FF6EC7', '#E0FF2E',
+  '#FF5F1F', '#BC13FE', '#00FFFF', '#FF073A'
 ];
 
 function randomNeonExcluding(exclude) {
@@ -89,8 +83,26 @@ const HIT_VELOCITY = 1.8;
 
 const pixelMap = new Map();
 let walls = [];
+let wallSet = new Set();
 let activated = false;
 let toBreak = [];
+let totalPixels = 0; // contagem inicial
+
+// --- Vibração ---
+const VIBRATE_THROTTLE = 120; // ms mínimo entre vibrações
+let lastVibTime = 0;
+
+function vibrateOnWallHit() {
+  if (!navigator.vibrate) return;
+  const now = Date.now();
+  if (now - lastVibTime < VIBRATE_THROTTLE) return;
+  lastVibTime = now;
+
+  const ratio = totalPixels > 0 ? pixelMap.size / totalPixels : 0;
+  // duração: 40ms quando cheio → ~5ms quando quase vazio
+  const duration = Math.round(5 + ratio * 35);
+  if (duration >= 5) navigator.vibrate(duration);
+}
 
 function createPixelBody(x, y, size, color, hits, gen, isStatic) {
   const body = Bodies.rectangle(x, y, size, size, {
@@ -109,6 +121,7 @@ function createPixelBody(x, y, size, color, hits, gen, isStatic) {
 
 function rebuildWalls() {
   walls.forEach(w => World.remove(world, w));
+  wallSet.clear();
   const t = 60;
   walls = [
     Bodies.rectangle(W/2, H+t/2, W+100, t, { isStatic: true }),
@@ -116,6 +129,7 @@ function rebuildWalls() {
     Bodies.rectangle(-t/2, H/2,  t, H+100, { isStatic: true }),
     Bodies.rectangle(W+t/2, H/2, t, H+100, { isStatic: true }),
   ];
+  walls.forEach(w => wallSet.add(w.id));
   World.add(world, walls);
 }
 rebuildWalls();
@@ -152,19 +166,24 @@ function buildPixels() {
       createPixelBody(x, y, PIXEL_SIZE, color, 10, 0, true);
     }
   }
+  totalPixels = pixelMap.size;
 }
 buildPixels();
 
-// change color on each valid hit
 Events.on(engine, 'collisionStart', (event) => {
   if (!activated) return;
   event.pairs.forEach(pair => {
     const { bodyA, bodyB } = pair;
     const relVel = Vector.magnitude(Vector.sub(bodyA.velocity, bodyB.velocity));
+
+    // vibração: apenas quando um dos corpos é parede
+    const hitsWall = wallSet.has(bodyA.id) || wallSet.has(bodyB.id);
+    if (hitsWall && relVel >= HIT_VELOCITY) vibrateOnWallHit();
+
     if (relVel < HIT_VELOCITY) return;
     [bodyA, bodyB].forEach(b => {
       if (!pixelMap.has(b.id)) return;
-      b._color = randomNeonExcluding(b._color); // troca de cor
+      b._color = randomNeonExcluding(b._color);
       b._hits--;
       if (b._hits <= 0 && !toBreak.includes(b.id)) toBreak.push(b.id);
     });
@@ -253,7 +272,6 @@ function drawPixel(body) {
   ctx.translate(x, y);
   ctx.rotate(body.angle);
 
-  // glow neon
   ctx.shadowColor = color;
   ctx.shadowBlur = 8 + damage * 10;
 
