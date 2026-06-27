@@ -132,7 +132,7 @@ function buildPixels() {
       const y = offsetY + r * (PIXEL_SIZE + GAP);
       const color = pickColor(r, c, grid);
       grid[r][c] = color;
-      createPixelBody(x, y, PIXEL_SIZE, color, 5, 0, true);
+      createPixelBody(x, y, PIXEL_SIZE, color, 10, 0, true);
     }
   }
 }
@@ -164,7 +164,7 @@ function breakPixel(body) {
   if (gen >= 1) return;
   const half = Math.floor(size / 2);
   [[-half / 2, 0], [half / 2, 0]].forEach(([dx, dy]) => {
-    const nb = createPixelBody(x + dx, y + dy, half, color, 3, 1, false);
+    const nb = createPixelBody(x + dx, y + dy, half, color, 6, 1, false);
     Body.applyForce(nb, nb.position, {
       x: (Math.random() - 0.5) * 0.002,
       y: -Math.random() * 0.002
@@ -230,7 +230,7 @@ setupOrientation();
 function drawPixel(body) {
   const size = body._size;
   const color = body._color;
-  const maxHits = body._gen === 0 ? 5 : 3;
+  const maxHits = body._gen === 0 ? 10 : 6;
   const damage = 1 - (body._hits / maxHits);
   const { x, y } = body.position;
   ctx.save();
