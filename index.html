@@ -19,7 +19,7 @@
   #permBtn {
     display: none;
     position: fixed; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%); 
     padding: 14px 28px; background: #fff; color: #111;
     border: none; border-radius: 12px;
     font-size: 16px; font-family: -apple-system, sans-serif; cursor: pointer;
@@ -33,7 +33,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
 <script>
-const { Engine, Bodies, Body, World } = Matter;
+const { Engine, Bodies, Body, World, Sleeping } = Matter;
 
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
@@ -54,7 +54,10 @@ const COLORS = [
   '#A8DADC','#FB5607','#FFBE0B','#3A86FF'
 ];
 
-const engine = Engine.create({ gravity: { x: 0, y: 1 } });
+const engine = Engine.create({
+  gravity: { x: 0, y: 1 },
+  enableSleeping: true
+});
 const world = engine.world;
 
 const PIXEL = 18;
@@ -110,8 +113,11 @@ function buildPixels() {
       const color = pickColor(r, c, grid);
       grid[r][c] = color;
       const body = Bodies.rectangle(x, y, PIXEL, PIXEL, {
-        isStatic: true, restitution: 0.35,
-        friction: 0.05, frictionAir: 0.02
+        isStatic: true,
+        restitution: 0.2,
+        friction: 0.8,
+        frictionAir: 0.08,
+        sleepThreshold: 30
       });
       body._color = color;
       World.add(world, body);
@@ -139,8 +145,14 @@ function activateSensors() {
     if (!activated) return;
     const beta  = (e.beta  || 0) * Math.PI / 180;
     const gamma = (e.gamma || 0) * Math.PI / 180;
-    engine.gravity.x = Math.sin(gamma) * Math.cos(beta) * 2;
-    engine.gravity.y = Math.sin(beta) * 2;
+    const newGx = Math.sin(gamma) * Math.cos(beta) * 2;
+    const newGy = Math.sin(beta) * 2;
+    // wake sleeping bodies only when gravity changes significantly
+    if (Math.abs(newGx - engine.gravity.x) > 0.05 || Math.abs(newGy - engine.gravity.y) > 0.05) {
+      engine.gravity.x = newGx;
+      engine.gravity.y = newGy;
+      pixels.forEach(p => Sleeping.set(p.body, false));
+    }
   }, true);
 }
 
