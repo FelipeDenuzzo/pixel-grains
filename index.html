@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Pixel Grains</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; overflow: hidden; touch-action: none; }
+  canvas { display: block; }
+  #hint {
+    position: fixed; bottom: 40px; left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.5);
+    font-family: -apple-system, sans-serif;
+    font-size: 13px; text-align: center;
+    pointer-events: none; transition: opacity 1s;
+  }
+  #permBtn {
+    display: none;
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 14px 28px; background: #fff; color: #111;
+    border: none; border-radius: 12px;
+    font-size: 16px; font-family: -apple-system, sans-serif; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hint">Gire o celular para soltar os pixels ↓</div>
+<button id="permBtn">Ativar sensor de movimento</button>
+
+<script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+<script>
+const { Engine, Bodies, Body, World } = Matter;
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const hint = document.getElementById('hint');
+const permBtn = document.getElementById('permBtn');
+
+let W, H;
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', () => { resize(); rebuildWalls(); });
+
+const COLORS = [
+  '#E63946','#F4A261','#2A9D8F','#457B9D',
+  '#E9C46A','#8338EC','#06D6A0','#FF6B6B',
+  '#A8DADC','#FB5607','#FFBE0B','#3A86FF'
+];
+
+const engine = Engine.create({ gravity: { x: 0, y: 1 } });
+const world = engine.world;
+
+const PIXEL = 18;
+const GAP = 3;
+let pixels = [];
+let walls = [];
+let activated = false;
+
+function rebuildWalls() {
+  walls.forEach(w => World.remove(world, w));
+  const t = 60;
+  walls = [
+    Bodies.rectangle(W/2, H + t/2, W+100, t, { isStatic: true }),
+    Bodies.rectangle(W/2, -t/2,    W+100, t, { isStatic: true }),
+    Bodies.rectangle(-t/2, H/2,    t, H+100, { isStatic: true }),
+    Bodies.rectangle(W + t/2, H/2, t, H+100, { isStatic: true }),
+  ];
+  World.add(world, walls);
+}
+rebuildWalls();
+
+function buildPixels() {
+  pixels.forEach(p => World.remove(world, p.body));
+  pixels = [];
+
+  const cols = Math.floor(W / (PIXEL + GAP));
+  const rows = Math.floor(H / (PIXEL + GAP));
+  const offsetX = (W - cols * (PIXEL + GAP)) / 2 + PIXEL / 2;
+  const offsetY = (H - rows * (PIXEL + GAP)) / 2 + PIXEL / 2;
+
+  const emptyTop    = Math.floor(rows * 0.42);
+  const emptyBottom = Math.floor(rows * 0.58);
+  const emptyLeft   = Math.floor(cols * 0.30);
+  const emptyRight  = Math.floor(cols * 0.70);
+
+  function pickColor(r, c, grid) {
+    const used = new Set();
+    if (r > 0 && grid[r-1]?.[c]) used.add(grid[r-1][c]);
+    if (c > 0 && grid[r]?.[c-1]) used.add(grid[r][c-1]);
+    const av = COLORS.filter(x => !used.has(x));
+    return av[Math.floor(Math.random() * av.length)] || COLORS[0];
+  }
+
+  const grid = [];
+  for (let r = 0; r < rows; r++) {
+    grid[r] = [];
+    for (let c = 0; c < cols; c++) {
+      if (r >= emptyTop && r < emptyBottom && c >= emptyLeft && c < emptyRight) {
+        grid[r][c] = null; continue;
+      }
+      const x = offsetX + c * (PIXEL + GAP);
+      const y = offsetY + r * (PIXEL + GAP);
+      const color = pickColor(r, c, grid);
+      grid[r][c] = color;
+      const body = Bodies.rectangle(x, y, PIXEL, PIXEL, {
+        isStatic: true, restitution: 0.35,
+        friction: 0.05, frictionAir: 0.02
+      });
+      body._color = color;
+      World.add(world, body);
+      pixels.push({ body, color });
+    }
+  }
+}
+buildPixels();
+
+function releasePixels() {
+  if (activated) return;
+  activated = true;
+  hint.style.opacity = '0';
+  pixels.forEach(p => {
+    Body.setStatic(p.body, false);
+    Body.applyForce(p.body, p.body.position, {
+      x: (Math.random() - 0.5) * 0.0008,
+      y: (Math.random() - 0.5) * 0.0008
+    });
+  });
+}
+
+function activateSensors() {
+  window.addEventListener('deviceorientation', (e) => {
+    if (!activated) return;
+    const beta  = (e.beta  || 0) * Math.PI / 180;
+    const gamma = (e.gamma || 0) * Math.PI / 180;
+    engine.gravity.x = Math.sin(gamma) * Math.cos(beta) * 2;
+    engine.gravity.y = Math.sin(beta) * 2;
+  }, true);
+}
+
+function setupOrientation() {
+  if (typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function') {
+    permBtn.style.display = 'block';
+    permBtn.addEventListener('click', async () => {
+      try {
+        const perm = await DeviceOrientationEvent.requestPermission();
+        if (perm === 'granted') {
+          permBtn.style.display = 'none';
+          activateSensors();
+          releasePixels();
+        }
+      } catch(e) { console.error(e); }
+    });
+  } else {
+    activateSensors();
+    window.addEventListener('deviceorientation', function first(e) {
+      if (Math.abs(e.gamma) > 5 || Math.abs(e.beta) > 5) {
+        releasePixels();
+        window.removeEventListener('deviceorientation', first, true);
+      }
+    }, true);
+    window.addEventListener('touchstart', releasePixels, { once: true });
+  }
+}
+setupOrientation();
+
+function drawPixel(body, color) {
+  const { x, y } = body.position;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(body.angle);
+  ctx.fillStyle = color;
+  ctx.fillRect(-PIXEL/2, -PIXEL/2, PIXEL, PIXEL);
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-PIXEL/2, -PIXEL/2, PIXEL, PIXEL);
+  ctx.restore();
+}
+
+function loop() {
+  Engine.update(engine, 1000/60);
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, 0, W, H);
+  pixels.forEach(p => drawPixel(p.body, p.color));
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
