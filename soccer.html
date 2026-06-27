@@ -217,68 +217,6 @@ const pixelMap=new Map(), pixelMeta=new Map();
 let walls=[],wallSet=new Set();
 let activated=false,toBreak=[],totalPixels=0;
 
-// ---- Audio: torcida ----
-let audioCtx=null;
-const CROWD_THROTTLE=150;
-let lastCrowdTime=0;
-
-function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
-
-function playCrowd(){
-  if(!audioCtx)return;
-  const wallNow=Date.now();
-  if(wallNow-lastCrowdTime<CROWD_THROTTLE)return;
-  lastCrowdTime=wallNow;
-
-  const now=audioCtx.currentTime;
-  const ratio=totalPixels>0?pixelMap.size/totalPixels:0;
-
-  // duração: mais pixels = torcida mais longa e intensa
-  const dur   = 0.18 + ratio * 0.55;   // 0.18s -> 0.73s
-  const gain  = 0.04 + ratio * 0.18;   // volume baixo base
-
-  const sampleRate=audioCtx.sampleRate;
-  const bufSize=Math.floor(sampleRate*dur);
-  const buf=audioCtx.createBuffer(2,bufSize,sampleRate); // estéreo
-
-  for(let ch=0;ch<2;ch++){
-    const data=buf.getChannelData(ch);
-    for(let i=0;i<bufSize;i++){
-      // envelope: ataque rápido, decaimento médio
-      const t=i/bufSize;
-      const env = t<0.1 ? t/0.1 : Math.exp(-(t-0.1)*4.5);
-      // mistura de vozes: ruido com leve modulação
-      const noise=(Math.random()*2-1);
-      // ondulação coletiva (simula várias vozes)
-      const wave=Math.sin(2*Math.PI*280*i/sampleRate)*0.3
-               + Math.sin(2*Math.PI*380*i/sampleRate)*0.2
-               + Math.sin(2*Math.PI*520*i/sampleRate)*0.15;
-      data[i]=(noise*0.6 + wave*0.4)*env;
-    }
-  }
-
-  const src=audioCtx.createBufferSource(); src.buffer=buf;
-
-  // passa-banda: freq vocal da multidão (300-2500 Hz)
-  const hp=audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=300;
-  const lp=audioCtx.createBiquadFilter(); lp.type='lowpass';  lp.frequency.value=2500;
-
-  // leve reverb simulado com delay
-  const delay=audioCtx.createDelay(); delay.delayTime.value=0.06;
-  const fbGain=audioCtx.createGain(); fbGain.gain.value=0.25;
-
-  const masterGain=audioCtx.createGain();
-  masterGain.gain.setValueAtTime(gain,now);
-  masterGain.gain.exponentialRampToValueAtTime(0.0001,now+dur+0.05);
-
-  src.connect(hp); hp.connect(lp);
-  lp.connect(masterGain);
-  lp.connect(delay); delay.connect(fbGain); fbGain.connect(delay); // loop de delay
-  delay.connect(masterGain);
-  masterGain.connect(audioCtx.destination);
-  src.start(now);
-}
-
 function createPixelBody(x,y,size,hits,gen,isStatic){
   const body=Bodies.rectangle(x,y,size,size,{isStatic:isStatic||false,restitution:0.2,friction:0.8,frictionAir:0.08,sleepThreshold:30});
   body._size=size;body._hits=hits;body._gen=gen;
@@ -331,7 +269,6 @@ Events.on(engine,'collisionStart',(event)=>{
   event.pairs.forEach(pair=>{
     const{bodyA,bodyB}=pair;
     const relVel=Vector.magnitude(Vector.sub(bodyA.velocity,bodyB.velocity));
-    if((wallSet.has(bodyA.id)||wallSet.has(bodyB.id))&&relVel>=HIT_VELOCITY) playCrowd();
     if(relVel<HIT_VELOCITY)return;
     [bodyA,bodyB].forEach(b=>{
       if(!pixelMap.has(b.id))return;
@@ -440,7 +377,6 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-initAudio();
 buildPixels();
 setupOrientation();
 loop();
