@@ -6,15 +6,110 @@
 <title>Pixel Grains</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #111; overflow: hidden; touch-action: none; }
+  body { background: #111; overflow: hidden; touch-action: none; font-family: -apple-system, sans-serif; color: #fff; }
   canvas { display: block; }
+
+  /* ---- SCREENS ---- */
+  .screen {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #111;
+    transition: opacity 0.4s;
+    z-index: 10;
+  }
+  .screen.hidden { opacity: 0; pointer-events: none; }
+
+  /* ---- HOME ---- */
+  #homeScreen .logo {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin-bottom: 6px;
+  }
+  #homeScreen .logo span { color: #E63946; }
+  #homeScreen .subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 60px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .mode-card {
+    width: 260px;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 24px 20px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+    text-align: left;
+  }
+  .mode-card:active { transform: scale(0.97); }
+  .mode-card:hover { border-color: #E63946; }
+  .mode-card .mode-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .mode-card .mode-desc {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.5;
+  }
+  .mode-card .mode-badge {
+    display: inline-block;
+    font-size: 10px;
+    background: #E63946;
+    color: #fff;
+    border-radius: 6px;
+    padding: 2px 8px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* ---- ROTATION TIP ---- */
+  #rotationScreen .icon {
+    font-size: 56px;
+    margin-bottom: 20px;
+  }
+  #rotationScreen h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  #rotationScreen p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    max-width: 280px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+  .btn-primary {
+    background: #E63946;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 16px 48px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:active { opacity: 0.8; }
+
+  /* ---- GAME HUD ---- */
   #hint {
     position: fixed; bottom: 40px; left: 50%;
     transform: translateX(-50%);
-    color: rgba(255,255,255,0.5);
-    font-family: -apple-system, sans-serif;
+    color: rgba(255,255,255,0.4);
     font-size: 13px; text-align: center;
     pointer-events: none; transition: opacity 1s;
+    z-index: 5;
   }
   #permBtn {
     display: none;
@@ -22,23 +117,83 @@
     transform: translate(-50%, -50%);
     padding: 14px 28px; background: #fff; color: #111;
     border: none; border-radius: 12px;
-    font-size: 16px; font-family: -apple-system, sans-serif; cursor: pointer;
+    font-size: 16px; cursor: pointer;
+    z-index: 5;
+  }
+  #backBtn {
+    position: fixed; top: 20px; left: 20px;
+    background: rgba(255,255,255,0.1);
+    border: none; color: #fff;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    z-index: 5;
   }
 </style>
 </head>
 <body>
+
+<!-- HOME -->
+<div class="screen" id="homeScreen">
+  <div class="logo">PIXEL<span>.</span></div>
+  <div class="subtitle">Grains</div>
+  <div class="mode-card" id="startMode">
+    <div class="mode-badge">Disponível</div>
+    <div class="mode-title">Moedor de Pixels</div>
+    <div class="mode-desc">Solte os pixels com a gravidade e quebre-os sacudindo o celular.</div>
+  </div>
+  <div class="mode-card" style="opacity:0.4; cursor:default;">
+    <div class="mode-badge" style="background:#555;">Em breve</div>
+    <div class="mode-title">Modo 2</div>
+    <div class="mode-desc">Novos modos chegando em breve.</div>
+  </div>
+</div>
+
+<!-- ROTATION TIP -->
+<div class="screen hidden" id="rotationScreen">
+  <div class="icon">🔒</div>
+  <h2>Trave a rotação da tela</h2>
+  <p>Para uma melhor experiência, ative o <strong>bloqueio de rotação</strong> no seu celular antes de jogar.<br><br>Deslize o Centro de Controle e toque no ícone de rotação.</p>
+  <button class="btn-primary" id="gotItBtn">Entendi, vamos lá!</button>
+</div>
+
+<!-- GAME -->
 <canvas id="c"></canvas>
 <div id="hint">Gire o celular para soltar os pixels ↓</div>
 <button id="permBtn">Ativar sensor de movimento</button>
+<button id="backBtn">&#8592; Menu</button>
 
 <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
 <script>
 const { Engine, Events, Bodies, Body, World, Sleeping, Vector } = Matter;
 
+// --- Screens ---
+const homeScreen     = document.getElementById('homeScreen');
+const rotationScreen = document.getElementById('rotationScreen');
+const startMode      = document.getElementById('startMode');
+const gotItBtn       = document.getElementById('gotItBtn');
+const backBtn        = document.getElementById('backBtn');
+const hint           = document.getElementById('hint');
+const permBtn        = document.getElementById('permBtn');
+
+startMode.addEventListener('click', () => {
+  homeScreen.classList.add('hidden');
+  rotationScreen.classList.remove('hidden');
+});
+
+gotItBtn.addEventListener('click', () => {
+  rotationScreen.classList.add('hidden');
+  startGame();
+});
+
+backBtn.addEventListener('click', () => {
+  location.reload();
+});
+
+// --- Canvas ---
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-const hint = document.getElementById('hint');
-const permBtn = document.getElementById('permBtn');
 
 let W, H;
 function resize() {
@@ -54,10 +209,7 @@ const COLORS = [
   '#A8DADC','#FB5607','#FFBE0B','#3A86FF'
 ];
 
-const engine = Engine.create({
-  gravity: { x: 0, y: 1 },
-  enableSleeping: true
-});
+const engine = Engine.create({ gravity: { x: 0, y: 1 }, enableSleeping: true });
 const world = engine.world;
 
 const PIXEL_SIZE = 18;
@@ -68,14 +220,13 @@ const pixelMap = new Map();
 let walls = [];
 let activated = false;
 let toBreak = [];
+let gameStarted = false;
 
 function createPixelBody(x, y, size, color, hits, gen, isStatic) {
   const body = Bodies.rectangle(x, y, size, size, {
     isStatic: isStatic || false,
-    restitution: 0.2,
-    friction: 0.8,
-    frictionAir: 0.08,
-    sleepThreshold: 30
+    restitution: 0.2, friction: 0.8,
+    frictionAir: 0.08, sleepThreshold: 30
   });
   body._color = color;
   body._size = size;
@@ -90,10 +241,10 @@ function rebuildWalls() {
   walls.forEach(w => World.remove(world, w));
   const t = 60;
   walls = [
-    Bodies.rectangle(W/2, H + t/2, W+100, t, { isStatic: true }),
-    Bodies.rectangle(W/2, -t/2,    W+100, t, { isStatic: true }),
-    Bodies.rectangle(-t/2, H/2,    t, H+100, { isStatic: true }),
-    Bodies.rectangle(W + t/2, H/2, t, H+100, { isStatic: true }),
+    Bodies.rectangle(W/2, H+t/2, W+100, t, { isStatic: true }),
+    Bodies.rectangle(W/2, -t/2,  W+100, t, { isStatic: true }),
+    Bodies.rectangle(-t/2, H/2,  t, H+100, { isStatic: true }),
+    Bodies.rectangle(W+t/2, H/2, t, H+100, { isStatic: true }),
   ];
   World.add(world, walls);
 }
@@ -102,17 +253,14 @@ rebuildWalls();
 function buildPixels() {
   pixelMap.forEach(b => World.remove(world, b));
   pixelMap.clear();
-
   const cols = Math.floor(W / (PIXEL_SIZE + GAP));
   const rows = Math.floor(H / (PIXEL_SIZE + GAP));
   const offsetX = (W - cols * (PIXEL_SIZE + GAP)) / 2 + PIXEL_SIZE / 2;
   const offsetY = (H - rows * (PIXEL_SIZE + GAP)) / 2 + PIXEL_SIZE / 2;
-
   const emptyTop    = Math.floor(rows * 0.42);
   const emptyBottom = Math.floor(rows * 0.58);
   const emptyLeft   = Math.floor(cols * 0.30);
   const emptyRight  = Math.floor(cols * 0.70);
-
   function pickColor(r, c, grid) {
     const used = new Set();
     if (r > 0 && grid[r-1]?.[c]) used.add(grid[r-1][c]);
@@ -120,7 +268,6 @@ function buildPixels() {
     const av = COLORS.filter(x => !used.has(x));
     return av[Math.floor(Math.random() * av.length)] || COLORS[0];
   }
-
   const grid = [];
   for (let r = 0; r < rows; r++) {
     grid[r] = [];
@@ -136,7 +283,6 @@ function buildPixels() {
     }
   }
 }
-buildPixels();
 
 Events.on(engine, 'collisionStart', (event) => {
   if (!activated) return;
@@ -147,9 +293,7 @@ Events.on(engine, 'collisionStart', (event) => {
     [bodyA, bodyB].forEach(b => {
       if (!pixelMap.has(b.id)) return;
       b._hits--;
-      if (b._hits <= 0 && !toBreak.includes(b.id)) {
-        toBreak.push(b.id);
-      }
+      if (b._hits <= 0 && !toBreak.includes(b.id)) toBreak.push(b.id);
     });
   });
 });
@@ -163,11 +307,10 @@ function breakPixel(body) {
   pixelMap.delete(body.id);
   if (gen >= 1) return;
   const half = Math.floor(size / 2);
-  [[-half / 2, 0], [half / 2, 0]].forEach(([dx, dy]) => {
-    const nb = createPixelBody(x + dx, y + dy, half, color, 6, 1, false);
+  [[-half/2, 0], [half/2, 0]].forEach(([dx, dy]) => {
+    const nb = createPixelBody(x+dx, y+dy, half, color, 6, 1, false);
     Body.applyForce(nb, nb.position, {
-      x: (Math.random() - 0.5) * 0.002,
-      y: -Math.random() * 0.002
+      x: (Math.random()-0.5)*0.002, y: -Math.random()*0.002
     });
   });
 }
@@ -179,8 +322,7 @@ function releasePixels() {
   pixelMap.forEach(body => {
     Body.setStatic(body, false);
     Body.applyForce(body, body.position, {
-      x: (Math.random() - 0.5) * 0.0008,
-      y: (Math.random() - 0.5) * 0.0008
+      x: (Math.random()-0.5)*0.0008, y: (Math.random()-0.5)*0.0008
     });
   });
 }
@@ -225,7 +367,14 @@ function setupOrientation() {
     window.addEventListener('touchstart', releasePixels, { once: true });
   }
 }
-setupOrientation();
+
+function startGame() {
+  if (gameStarted) return;
+  gameStarted = true;
+  buildPixels();
+  setupOrientation();
+  loop();
+}
 
 function drawPixel(body) {
   const size = body._size;
@@ -243,14 +392,12 @@ function drawPixel(body) {
     ctx.strokeStyle = 'rgba(0,0,0,0.6)';
     ctx.lineWidth = 0.8;
     ctx.beginPath();
-    ctx.moveTo(-size/4, -size/2);
-    ctx.lineTo(size/4, size/2);
+    ctx.moveTo(-size/4, -size/2); ctx.lineTo(size/4, size/2);
     ctx.stroke();
   }
   if (damage > 0.7) {
     ctx.beginPath();
-    ctx.moveTo(size/2, -size/4);
-    ctx.lineTo(-size/2, size/4);
+    ctx.moveTo(size/2, -size/4); ctx.lineTo(-size/2, size/4);
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
@@ -263,10 +410,7 @@ function drawPixel(body) {
 function loop() {
   Engine.update(engine, 1000/60);
   if (toBreak.length > 0) {
-    toBreak.forEach(id => {
-      const b = pixelMap.get(id);
-      if (b) breakPixel(b);
-    });
+    toBreak.forEach(id => { const b = pixelMap.get(id); if (b) breakPixel(b); });
     toBreak = [];
   }
   ctx.fillStyle = '#111';
@@ -274,7 +418,6 @@ function loop() {
   pixelMap.forEach(b => drawPixel(b));
   requestAnimationFrame(loop);
 }
-loop();
 </script>
 </body>
 </html>
