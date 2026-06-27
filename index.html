@@ -19,7 +19,7 @@
   #permBtn {
     display: none;
     position: fixed; top: 50%; left: 50%;
-    transform: translate(-50%, -50%); 
+    transform: translate(-50%, -50%);
     padding: 14px 28px; background: #fff; color: #111;
     border: none; border-radius: 12px;
     font-size: 16px; font-family: -apple-system, sans-serif; cursor: pointer;
@@ -33,7 +33,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
 <script>
-const { Engine, Bodies, Body, World, Sleeping } = Matter;
+const { Engine, Events, Bodies, Body, World, Sleeping } = Matter;
 
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
@@ -60,11 +60,32 @@ const engine = Engine.create({
 });
 const world = engine.world;
 
-const PIXEL = 18;
+const PIXEL_SIZE = 18;
 const GAP = 3;
-let pixels = [];
+const MIN_FORCE = 0.00012; // force threshold to count as real collision
+
+// Registry: body.id -> pixel metadata
+const pixelMap = new Map();
 let walls = [];
 let activated = false;
+let toBreak = []; // queue of bodies to break after physics step
+
+function createPixelBody(x, y, size, color, hits, isStatic) {
+  const body = Bodies.rectangle(x, y, size, size, {
+    isStatic: isStatic || false,
+    restitution: 0.2,
+    friction: 0.8,
+    frictionAir: 0.08,
+    sleepThreshold: 30
+  });
+  body._color = color;
+  body._size = size;
+  body._hits = hits;      // remaining hits before break
+  body._gen = size === PIXEL_SIZE ? 0 : 1; // generation
+  World.add(world, body);
+  pixelMap.set(body.id, body);
+  return body;
+}
 
 function rebuildWalls() {
   walls.forEach(w => World.remove(world, w));
@@ -80,13 +101,13 @@ function rebuildWalls() {
 rebuildWalls();
 
 function buildPixels() {
-  pixels.forEach(p => World.remove(world, p.body));
-  pixels = [];
+  pixelMap.forEach(b => World.remove(world, b));
+  pixelMap.clear();
 
-  const cols = Math.floor(W / (PIXEL + GAP));
-  const rows = Math.floor(H / (PIXEL + GAP));
-  const offsetX = (W - cols * (PIXEL + GAP)) / 2 + PIXEL / 2;
-  const offsetY = (H - rows * (PIXEL + GAP)) / 2 + PIXEL / 2;
+  const cols = Math.floor(W / (PIXEL_SIZE + GAP));
+  const rows = Math.floor(H / (PIXEL_SIZE + GAP));
+  const offsetX = (W - cols * (PIXEL_SIZE + GAP)) / 2 + PIXEL_SIZE / 2;
+  const offsetY = (H - rows * (PIXEL_SIZE + GAP)) / 2 + PIXEL_SIZE / 2;
 
   const emptyTop    = Math.floor(rows * 0.42);
   const emptyBottom = Math.floor(rows * 0.58);
@@ -108,32 +129,64 @@ function buildPixels() {
       if (r >= emptyTop && r < emptyBottom && c >= emptyLeft && c < emptyRight) {
         grid[r][c] = null; continue;
       }
-      const x = offsetX + c * (PIXEL + GAP);
-      const y = offsetY + r * (PIXEL + GAP);
+      const x = offsetX + c * (PIXEL_SIZE + GAP);
+      const y = offsetY + r * (PIXEL_SIZE + GAP);
       const color = pickColor(r, c, grid);
       grid[r][c] = color;
-      const body = Bodies.rectangle(x, y, PIXEL, PIXEL, {
-        isStatic: true,
-        restitution: 0.2,
-        friction: 0.8,
-        frictionAir: 0.08,
-        sleepThreshold: 30
-      });
-      body._color = color;
-      World.add(world, body);
-      pixels.push({ body, color });
+      createPixelBody(x, y, PIXEL_SIZE, color, 5, true);
     }
   }
 }
 buildPixels();
 
+// --- Collision detection ---
+Events.on(engine, 'collisionStart', (event) => {
+  if (!activated) return;
+  event.pairs.forEach(pair => {
+    const { bodyA, bodyB, collision } = pair;
+    const force = collision.depth;
+    if (force < MIN_FORCE) return;
+    [bodyA, bodyB].forEach(b => {
+      if (!pixelMap.has(b.id)) return; // wall or unknown
+      b._hits--;
+      if (b._hits <= 0 && !toBreak.includes(b.id)) {
+        toBreak.push(b.id);
+      }
+    });
+  });
+});
+
+function breakPixel(body) {
+  const { x, y } = body.position;
+  const size = body._size;
+  const color = body._color;
+  const gen = body._gen;
+
+  World.remove(world, body);
+  pixelMap.delete(body.id);
+
+  if (gen >= 1) return; // gen 1 (9px) just disappears
+
+  // gen 0 (18px) → spawn 2 half-size pixels
+  const half = Math.floor(size / 2);
+  const offsets = [[-half/2, 0], [half/2, 0]];
+  offsets.forEach(([dx, dy]) => {
+    const nb = createPixelBody(x + dx, y + dy, half, color, 3, false);
+    // small burst
+    Body.applyForce(nb, nb.position, {
+      x: (Math.random() - 0.5) * 0.002,
+      y: -Math.random() * 0.002
+    });
+  });
+}
+
 function releasePixels() {
   if (activated) return;
   activated = true;
   hint.style.opacity = '0';
-  pixels.forEach(p => {
-    Body.setStatic(p.body, false);
-    Body.applyForce(p.body, p.body.position, {
+  pixelMap.forEach(body => {
+    Body.setStatic(body, false);
+    Body.applyForce(body, body.position, {
       x: (Math.random() - 0.5) * 0.0008,
       y: (Math.random() - 0.5) * 0.0008
     });
@@ -147,11 +200,10 @@ function activateSensors() {
     const gamma = (e.gamma || 0) * Math.PI / 180;
     const newGx = Math.sin(gamma) * Math.cos(beta) * 2;
     const newGy = Math.sin(beta) * 2;
-    // wake sleeping bodies only when gravity changes significantly
     if (Math.abs(newGx - engine.gravity.x) > 0.05 || Math.abs(newGy - engine.gravity.y) > 0.05) {
       engine.gravity.x = newGx;
       engine.gravity.y = newGy;
-      pixels.forEach(p => Sleeping.set(p.body, false));
+      pixelMap.forEach(b => Sleeping.set(b, false));
     }
   }, true);
 }
@@ -183,24 +235,56 @@ function setupOrientation() {
 }
 setupOrientation();
 
-function drawPixel(body, color) {
+function drawPixel(body) {
   const { x, y } = body.position;
+  const size = body._size;
+  const color = body._color;
+  // fade color slightly based on damage
+  const maxHits = body._gen === 0 ? 5 : 3;
+  const damage = 1 - (body._hits / maxHits);
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(body.angle);
   ctx.fillStyle = color;
-  ctx.fillRect(-PIXEL/2, -PIXEL/2, PIXEL, PIXEL);
+  ctx.globalAlpha = 1 - damage * 0.3; // slight fade as it takes damage
+  ctx.fillRect(-size/2, -size/2, size, size);
+  // crack lines as damage increases
+  if (damage > 0.4) {
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(-size/4, -size/2);
+    ctx.lineTo(size/4, size/2);
+    ctx.stroke();
+  }
+  if (damage > 0.7) {
+    ctx.beginPath();
+    ctx.moveTo(size/2, -size/4);
+    ctx.lineTo(-size/2, size/4);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
   ctx.strokeStyle = 'rgba(0,0,0,0.7)';
   ctx.lineWidth = 1.5;
-  ctx.strokeRect(-PIXEL/2, -PIXEL/2, PIXEL, PIXEL);
+  ctx.strokeRect(-size/2, -size/2, size, size);
   ctx.restore();
 }
 
 function loop() {
   Engine.update(engine, 1000/60);
+
+  // process breaks outside physics step
+  if (toBreak.length > 0) {
+    toBreak.forEach(id => {
+      const b = pixelMap.get(id);
+      if (b) breakPixel(b);
+    });
+    toBreak = [];
+  }
+
   ctx.fillStyle = '#111';
   ctx.fillRect(0, 0, W, H);
-  pixels.forEach(p => drawPixel(p.body, p.color));
+  pixelMap.forEach(b => drawPixel(b));
   requestAnimationFrame(loop);
 }
 loop();
