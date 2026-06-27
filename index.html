@@ -62,7 +62,7 @@ const world = engine.world;
 
 const PIXEL_SIZE = 18;
 const GAP = 3;
-const HIT_VELOCITY = 1.8; // minimum relative speed to count as a real hit
+const HIT_VELOCITY = 7.2;
 
 const pixelMap = new Map();
 let walls = [];
@@ -138,16 +138,12 @@ function buildPixels() {
 }
 buildPixels();
 
-// --- Collision detection using relative velocity ---
 Events.on(engine, 'collisionStart', (event) => {
   if (!activated) return;
   event.pairs.forEach(pair => {
     const { bodyA, bodyB } = pair;
-
-    // calculate relative velocity magnitude
     const relVel = Vector.magnitude(Vector.sub(bodyA.velocity, bodyB.velocity));
-    if (relVel < HIT_VELOCITY) return; // too soft, ignore
-
+    if (relVel < HIT_VELOCITY) return;
     [bodyA, bodyB].forEach(b => {
       if (!pixelMap.has(b.id)) return;
       b._hits--;
@@ -163,13 +159,9 @@ function breakPixel(body) {
   const size = body._size;
   const color = body._color;
   const gen = body._gen;
-
   World.remove(world, body);
   pixelMap.delete(body.id);
-
-  if (gen >= 1) return; // 9px just disappears
-
-  // 18px → 2 fragments of 9px
+  if (gen >= 1) return;
   const half = Math.floor(size / 2);
   [[-half / 2, 0], [half / 2, 0]].forEach(([dx, dy]) => {
     const nb = createPixelBody(x + dx, y + dy, half, color, 3, 1, false);
@@ -241,15 +233,12 @@ function drawPixel(body) {
   const maxHits = body._gen === 0 ? 5 : 3;
   const damage = 1 - (body._hits / maxHits);
   const { x, y } = body.position;
-
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(body.angle);
   ctx.globalAlpha = 1 - damage * 0.3;
   ctx.fillStyle = color;
   ctx.fillRect(-size/2, -size/2, size, size);
-
-  // crack lines
   if (damage > 0.4) {
     ctx.strokeStyle = 'rgba(0,0,0,0.6)';
     ctx.lineWidth = 0.8;
@@ -264,7 +253,6 @@ function drawPixel(body) {
     ctx.lineTo(-size/2, size/4);
     ctx.stroke();
   }
-
   ctx.globalAlpha = 1;
   ctx.strokeStyle = 'rgba(0,0,0,0.7)';
   ctx.lineWidth = 1.5;
@@ -274,7 +262,6 @@ function drawPixel(body) {
 
 function loop() {
   Engine.update(engine, 1000/60);
-
   if (toBreak.length > 0) {
     toBreak.forEach(id => {
       const b = pixelMap.get(id);
@@ -282,7 +269,6 @@ function loop() {
     });
     toBreak = [];
   }
-
   ctx.fillStyle = '#111';
   ctx.fillRect(0, 0, W, H);
   pixelMap.forEach(b => drawPixel(b));
