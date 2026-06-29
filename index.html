@@ -26,11 +26,13 @@
   .mode-card:hover { border-color: #E63946; }
   .mode-card.neon:hover { border-color: #00FFFF; }
   .mode-card.soccer:hover { border-color: #4caf50; }
+  .mode-card.numbers:hover { border-color: #fff; }
   .mode-card .mode-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
   .mode-card .mode-desc { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; }
   .mode-card .mode-badge { display: inline-block; font-size: 10px; background: #E63946; color: #fff; border-radius: 6px; padding: 2px 8px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
   .mode-card.neon .mode-badge { background: #BC13FE; }
   .mode-card.soccer .mode-badge { background: #2e7d32; }
+  .mode-card.numbers .mode-badge { background: #222; border: 1px solid #555; color: #fff; }
   .mode-card.locked { cursor: default; opacity: 0.45; border-style: dashed; border-color: #444; position: relative; overflow: hidden; }
   .mode-card.locked:hover { border-color: #555; transform: none; }
   .mode-card.locked:active { transform: none; }
@@ -70,6 +72,12 @@
     <div class="mode-badge">Disponível</div>
     <div class="mode-title" style="color:#81c784;">Futebol</div>
     <div class="mode-desc">Bandeiras, bolas e jogadores do mundo todo. Campo de grama, physics e torcida.</div>
+  </a>
+
+  <a class="mode-card numbers" href="numbers.html">
+    <div class="mode-badge">Disponível</div>
+    <div class="mode-title" style="color:#fff; font-family: 'Courier New', monospace;">0 1 2 3 Números</div>
+    <div class="mode-desc">Pixels são dígitos brancos sobre fundo preto. Cada colisão troca o número. Minimalismo total.</div>
   </a>
 
   <div class="mode-card locked">
